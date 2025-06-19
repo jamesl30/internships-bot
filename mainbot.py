@@ -13,7 +13,7 @@ REPO_URL = 'https://github.com/cvrve/Summer2025-Internships'
 LOCAL_REPO_PATH = 'Summer2025-Internships'
 JSON_FILE_PATH = os.path.join(LOCAL_REPO_PATH, '.github', 'scripts', 'listings.json')
 DISCORD_TOKEN = '' #! Your Discord token
-CHANNEL_IDS = '' #! Your channel IDs
+CHANNEL_IDS = '1089678216832221194' #! Your channel IDs
 MAX_RETRIES = 3  # Maximum number of retries for failed channels
 
 # Initialize Discord bot and global variables
@@ -248,7 +248,7 @@ async def on_ready():
         await asyncio.sleep(1)
 
 # Schedule the job
-schedule.every(1).minutes.do(check_for_new_roles)
+# schedule.every(1).minutes.do(check_for_new_roles)
 
 # Run the bot
 print("Starting bot...")
