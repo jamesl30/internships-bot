@@ -1,9 +1,10 @@
 services:
-  - type: worker
-    name: internships-bot
+  - type: cron
+    name: internships-bot-cron
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: python mainbot.py
+    schedule: "0 9-17 * * 1-5"  # Every hour 9 AM-5 PM, Monday-Friday
+    startCommand: python cron_check.py
     envVars:
       - key: DISCORD_TOKEN
         sync: false
