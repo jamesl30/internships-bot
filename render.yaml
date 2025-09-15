@@ -1,0 +1,11 @@
+services:
+  - type: worker
+    name: internships-bot
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python mainbot.py
+    envVars:
+      - key: DISCORD_TOKEN
+        sync: false
+      - key: CHANNEL_IDS
+        sync: false

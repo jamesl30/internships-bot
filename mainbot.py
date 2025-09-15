@@ -12,12 +12,13 @@ import asyncio
 REPO_URL = 'https://github.com/cvrve/Summer2025-Internships'
 LOCAL_REPO_PATH = 'Summer2025-Internships'
 JSON_FILE_PATH = os.path.join(LOCAL_REPO_PATH, '.github', 'scripts', 'listings.json')
-DISCORD_TOKEN = '' #! Your Discord token
-CHANNEL_IDS = '1089678216832221194' #! Your channel IDs
+DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
+CHANNEL_IDS = os.getenv('CHANNEL_IDS', '').split(',') if os.getenv('CHANNEL_IDS') else []
 MAX_RETRIES = 3  # Maximum number of retries for failed channels
 
 # Initialize Discord bot and global variables
 intents = discord.Intents.default()
+intents.message_content = True
 bot = commands.Bot(command_prefix='!', intents=intents)
 failed_channels = set()  # Keep track of channels that have failed
 channel_failure_counts = {}  # Track failure counts for each channel
@@ -61,23 +62,15 @@ def format_message(role):
     :param role: The role dictionary containing internship information
     :return: A formatted message string for Discord
     """
-    cvrve = 'cvrve'
     location_str = ', '.join(role['locations']) if role['locations'] else 'Not specified'
     return f"""
 >>> # {role['company_name']} just posted a new internship!
 
-### Role:
-[{role['title']}]({role['url']})
-
-### Location:
-{location_str}
-
-### Season:
-{role['season']}
-
+### Role: [{role['title']}](<{role['url']}>)
+### Location: {location_str}
+### Season: {role['season']}
 ### Sponsorship: `{role['sponsorship']}`
 ### Posted on: {datetime.now().strftime('%B, %d')}
-made by the team @ [{cvrve}](https://www.cvrve.me/)
 """
 
 def format_deactivation_message(role):
@@ -88,7 +81,6 @@ def format_deactivation_message(role):
     :param role: The role dictionary containing internship information
     :return: A formatted deactivation message string for Discord
     """
-    cvrve = 'cvrve'
     return f"""
 >>> # {role['company_name']} internship is no longer active
 
@@ -97,7 +89,6 @@ def format_deactivation_message(role):
 
 ### Status: `Inactive`
 ### Deactivated on: {datetime.now().strftime('%B, %d')}
-made by the team @ [{cvrve}](https://www.cvrve.me/)
 """
 
 def compare_roles(old_role, new_role):
@@ -211,10 +202,7 @@ def check_for_new_roles():
         old_role = old_roles_dict.get((new_role['title'], new_role['company_name']))
         
         if old_role:
-            # Check if the role was previously active and is now inactive
-            if old_role['active'] and not new_role['active']:
-                deactivated_roles.append(new_role)
-                print(f"Role {new_role['title']} at {new_role['company_name']} is now inactive.")
+            continue
         elif new_role['is_visible'] and new_role['active']:
             new_roles.append(new_role)
             print(f"New role found: {new_role['title']} at {new_role['company_name']}")
@@ -225,9 +213,11 @@ def check_for_new_roles():
         bot.loop.create_task(send_messages_to_channels(message))
 
     # Handle deactivated roles
+    '''
     for role in deactivated_roles:
         message = format_deactivation_message(role)
         bot.loop.create_task(send_messages_to_channels(message))
+    '''
 
     # Update previous data
     with open('previous_data.json', 'w') as file:
@@ -243,12 +233,15 @@ async def on_ready():
     Event handler for when the bot is ready and connected to Discord.
     """
     print(f'Logged in as {bot.user}')
+    
+    check_for_new_roles()
+
     while True:
         schedule.run_pending()
         await asyncio.sleep(1)
 
 # Schedule the job
-# schedule.every(1).minutes.do(check_for_new_roles)
+schedule.every(10).minutes.do(check_for_new_roles)
 
 # Run the bot
 print("Starting bot...")
@@ -262,3 +255,4 @@ elif DISCORD_TOKEN == '':
     print("Please provide your Discord token.")
 else:
     print("An unknown error occurred.")
+
